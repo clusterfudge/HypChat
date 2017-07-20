@@ -249,7 +249,25 @@ class User(RestObject):
         'notify': notify,
         })
 
-    def history(self, maxResults=200, notBefore=None):
+    def history(self, date='recent', maxResults=200):
+        """
+        Requests the room history.
+
+        Note that if date is 'recent' (the default), HipChat will not return the complete history.
+        """
+        tz = 'UTC'
+        if date != 'recent':
+            date, tz = mktimestamp(date)
+        params = {
+        'date': date,
+        'timezone': tz,
+        'max-results': maxResults,
+        }
+        resp = self._requests.get(self.url + '/history', params=params)
+        return Linker._obj_from_text(resp.text, self._requests)
+
+    def latest(self, not_before=None, maxResults=200):
+
         """
         Requests the users private message history.
 
@@ -261,8 +279,8 @@ class User(RestObject):
         'max-results': maxResults,
 
         }
-        if notBefore is not None:
-            params["not-before"] = notBefore
+        if not_before is not None:
+            params["not-before"] = not_before
 
         resp = self._requests.get(self.url + '/history/latest', params=params)
         return Linker._obj_from_text(resp.text, self._requests)
